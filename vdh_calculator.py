@@ -8,35 +8,40 @@ import urllib.request
 import json
 import subprocess
 from fractions import Fraction
+import cmath
 
-# Nội dung tài liệu hướng dẫn được nhúng sẵn vào mã nguồn
 HD_CONTENT = """TÀI LIỆU HƯỚNG DẪN SỬ DỤNG CHƯƠNG TRÌNH VDH CALCULATOR
-Chương trình hỗ trợ tính toán số học, phân số, trị tuyệt đối, tổ hợp, chỉnh hợp, hoán vị, căn bậc n, lượng giác và quy đổi đơn vị.
+Chương trình hỗ trợ tính toán số học, phân số, trị tuyệt đối, tổ hợp, chỉnh hợp, hoán vị, giải phương trình, hệ phương trình, căn bậc n, lượng giác và quy đổi đơn vị.
 
-1. TÍNH TOÁN SỐ HỌC, PHÂN SỐ, TRỊ TUYỆT ĐỐI VÀ TỔ HỢP - CHỈNH HỢP - HOÁN VỊ
-- Phép tính cơ bản: Nhập trực tiếp biểu thức cộng, trừ, nhân, chia như 15+25, 100-35, 12*8, 144/12 hoặc kết hợp dấu ngoặc (10+5)*2 rồi nhấn Enter.
-- Phép tính phân số: Nhập theo cú pháp phan so, ví dụ phan so 1phan2+2phan3 rồi nhấn Enter.
-- Trị tuyệt đối: Nhập trituyetdoi kèm theo số, ví dụ trituyetdoi(-12).
-- Tổ hợp: Nhập theo cú pháp tohopchap[k]cua[n], ví dụ tohopchap3cua12.
-- Chỉnh hợp: Nhập theo cú pháp chinhhopchap[k]cua[n], ví dụ chinhhopchap3cua12.
-- Hoán vị: Nhập theo cú pháp hoanvi[n], ví dụ hoanvi5.
-- Phép tính lũy thừa (mũ): Dùng dấu ^, ví dụ 2^3.
-- Căn bậc n: Nhập can(n)số, ví dụ can(2)16.
+1. TÍNH TOÁN VÀ GIẢI TOÁN ĐẠI SỐ
+- Phép tính cơ bản: Nhập biểu thức như 15+25, 12*8, (10+5)*2.
+- Phân số: Nhập theo cú pháp phan so, ví dụ phan so 1phan2+2phan3.
+- Trị tuyệt đối: Nhập trituyetdoi kèm theo số hoặc biểu thức, ví dụ trituyetdoi(-12).
+- Tổ hợp - Chỉnh hợp - Hoán vị:
+  + Tổ hợp: tohopchap[k]cua[n] (ví dụ: tohopchap3cua12)
+  + Chỉnh hợp: chinhhopchap[k]cua[n] (ví dụ: chinhhopchap3cua12)
+  + Hoán vị: hoanvi[n] (ví dụ: hoanvi5)
+- Giải phương trình:
+  + Bậc 2 (ax^2 + bx + c = 0): ptb2 a b c (ví dụ: ptb2 1 -3 2)
+  + Bậc 3 (ax^3 + bx^2 + cx + d = 0): ptb3 a b c d
+  + Bậc 4 (ax^4 + ... + e = 0): ptb4 a b c d e
+  + Bậc n: ptbn a_n a_{n-1} ... a_0
+- Giải hệ phương trình tuyến tính:
+  + Hệ 2 phương trình: he2 a1 b1 c1 a2 b2 c2 (với a1x + b1y = c1)
+  + Hệ 3 phương trình: he3 a1 b1 c1 d1 a2 b2 c2 d2 a3 b3 c3 d3
+  + Hệ 4 phương trình: he4 ...
+  + Hệ n phương trình: hen [số_ẩn] [danh_sách_hệ_số...]
+- Lũy thừa và khai căn: Dùng dấu ^ (ví dụ 2^3), can(n)số (ví dụ can(2)16).
 
-2. TÍNH TOÁN LƯỢNG GIÁC
-- Nhập sin30, cos60, tan45, cot45...
+2. TÍNH TOÁN LƯỢNG GIÁC VÀ QUY ĐỔI ĐƠN VỊ
+- Lượng giác: sin30, cos60, tan45, cot45...
+- Quy đổi đơn vị: [Số][Đơn vị nguồn]to[Đơn vị đích] (ví dụ: 5mtofoot, 100usdtovnd).
 
-3. QUY ĐỔI ĐƠN VỊ ĐO LƯỜNG
-- Cú pháp chuẩn: [Số lượng][Đơn vị nguồn]to[Đơn vị đích] (ví dụ: 5mtofoot, 100usdtovnd).
+3. THAO TÁC HỖ TRỢ
+- Xem hướng dẫn: gõ hd, 0 hoặc help.
+- Nghe lại kết quả: Nhấn Enter khi dòng trống hoặc Ctrl + Enter.
+- Thoát: Nhấn Esc."""
 
-4. CÁC PHÍM TẮT VÀ THAO TÁC HỖ TRỢ
-- Mở tài liệu hướng dẫn: Gõ hd hoặc 0 hoặc help.
-- Nghe lại kết quả: Nhấn phím Enter khi dòng trống hoặc Ctrl + Enter.
-- Thoát chương trình: Nhấn Escape (Esc) hoặc Alt + F4."""
-
-# ==========================================
-# CÁC HÀM TIỆN ÍCH LÕI & XỬ LÝ TOÁN HỌC
-# ==========================================
 def paste_from_clipboard():
     try:
         import ctypes
@@ -90,6 +95,14 @@ def format_number(num):
     num = round(num, 6)
     if num.is_integer(): return str(int(num))
     else: return f"{num:.4f}".rstrip('0').rstrip('.').replace(".", ",")
+
+def format_complex(c):
+    if abs(c.imag) < 1e-7:
+        return format_number(c.real)
+    r = format_number(c.real)
+    i = format_number(abs(c.imag))
+    sign = " + " if c.imag > 0 else " - "
+    return f"{r}{sign}{i}i"
 
 def read_vn_number(n):
     if n == 0: return "không"
@@ -175,6 +188,123 @@ def process_fraction(expression):
     except Exception as e:
         return f"Lỗi tính toán phân số: {e}", ""
 
+def solve_quadratic(a, b, c):
+    if a == 0:
+        if b == 0:
+            return "Phương trình vô nghiệm." if c != 0 else "Phương trình vô số nghiệm."
+        return f"Phương trình bậc nhất, nghiệm x = {format_number(-c / b)}"
+    delta = b**2 - 4*a*c
+    if delta > 0:
+        x1 = (-b + math.sqrt(delta)) / (2*a)
+        x2 = (-b - math.sqrt(delta)) / (2*a)
+        return f"Phương trình có 2 nghiệm phân biệt:\nx1 = {format_number(x1)}\nx2 = {format_number(x2)}"
+    elif delta == 0:
+        x = -b / (2*a)
+        return f"Phương trình có nghiệm kép: x = {format_number(x)}"
+    else:
+        real_part = -b / (2*a)
+        imag_part = math.sqrt(-delta) / (2*a)
+        c1 = complex(real_part, imag_part)
+        c2 = complex(real_part, -imag_part)
+        return f"Phương trình có 2 nghiệm phức:\nx1 = {format_complex(c1)}\nx2 = {format_complex(c2)}"
+
+def solve_cubic(a, b, c, d):
+    if a == 0:
+        return solve_quadratic(b, c, d)
+    b /= a
+    c /= a
+    d /= a
+    
+    p = c - (b**2)/3.0
+    q = (2*(b**3))/27.0 - (b*c)/3.0 + d
+    discriminant = (q/2.0)**2 + (p/3.0)**3
+    
+    roots = []
+    if discriminant > 0:
+        sqrt_disc = math.sqrt(discriminant)
+        u = (-q/2.0 + sqrt_disc)**(1/3.0) if -q/2.0 + sqrt_disc >= 0 else -((-q/2.0 + sqrt_disc) ** 3) # safe root handling
+        # simpler real cubic root
+        def cbrt(val):
+            return math.copysign(abs(val)**(1/3.0), val)
+        u = cbrt(-q/2.0 + sqrt_disc)
+        v = cbrt(-q/2.0 - sqrt_disc)
+        roots.append(complex(u + v - b/3.0, 0))
+    elif discriminant == 0:
+        u = cbrt = lambda x: math.copysign(abs(x)**(1/3.0), x)
+        u_val = cbrt(-q/2.0)
+        roots.append(complex(2*u_val - b/3.0, 0))
+        roots.append(complex(-u_val - b/3.0, 0))
+    else:
+        r = math.sqrt(-(p/3.0)**3)
+        phi = math.acos(max(-1.0, min(1.0, -q / (2.0 * r))))
+        s = 2.0 * math.sqrt(-p/3.0)
+        for k in range(3):
+            roots.append(complex(s * math.cos((phi + 2*k*math.pi)/3.0) - b/3.0, 0))
+            
+    res_str = "Các nghiệm của phương trình bậc 3:\n"
+    for i, r in enumerate(roots, 1):
+        res_str += f"x{i} = {format_complex(r)}\n"
+    return res_str.strip()
+
+def solve_polynomial(coeffs):
+    # coeffs = [a_n, a_{n-1}, ..., a_0]
+    n = len(coeffs) - 1
+    if n <= 0:
+        return "Hệ số không hợp lệ."
+    if n == 1:
+        a, b = coeffs[0], coeffs[1]
+        if a == 0: return "Vô nghiệm hoặc vô số nghiệm."
+        return f"Nghiệm x = {format_number(-b/a)}"
+    if n == 2:
+        return solve_quadratic(coeffs[0], coeffs[1], coeffs[2])
+    if n == 3:
+        return solve_cubic(coeffs[0], coeffs[1], coeffs[2], coeffs[3])
+    
+    try:
+        import numpy as np
+        rts = np.roots(coeffs)
+        res = "Các nghiệm phương trình bậc " + str(n) + ":\n"
+        for i, r in enumerate(rts, 1):
+            res += f"x{i} = {format_complex(complex(r))}\n"
+        return res.strip()
+    except Exception:
+        return "Cần cài đặt thư viện hỗ trợ nâng cao cho phương trình bậc lớn hơn 3."
+
+def solve_linear_system(matrix):
+    n = len(matrix)
+    for i in range(n):
+        max_el = abs(matrix[i][i])
+        max_row = i
+        for k in range(i + 1, n):
+            if abs(matrix[k][i]) > max_el:
+                max_el = abs(matrix[k][i])
+                max_row = k
+                
+        matrix[i], matrix[max_row] = matrix[max_row], matrix[i]
+        
+        if abs(matrix[i][i]) < 1e-11:
+            return "Hệ phương trình vô nghiệm hoặc có vô số nghiệm."
+            
+        for k in range(i + 1, n):
+            c = -matrix[k][i] / matrix[i][i]
+            for j in range(i, n + 1):
+                if i == j:
+                    matrix[k][j] = 0
+                else:
+                    matrix[k][j] += c * matrix[i][j]
+                    
+    x = [0.0 for _ in range(n)]
+    for i in range(n - 1, -1, -1):
+        x[i] = matrix[i][n]
+        for j in range(i + 1, n):
+            x[i] -= matrix[i][j] * x[j]
+        x[i] /= matrix[i][i]
+        
+    res = "Nghiệm của hệ phương trình:\n"
+    for i, val in enumerate(x, 1):
+        res += f"x{i} = {format_number(val)}\n"
+    return res.strip()
+
 def process_query(query):
     if query.startswith("phanso"):
         return process_fraction(query)
@@ -196,39 +326,90 @@ def process_query(query):
         except Exception as e:
             return f"Lỗi tính trị tuyệt đối: {e}", ""
 
-    # Xử lý tổ hợp: tohopchap3cua12 -> math.comb(12, 3)
     match_tohop = re.match(r"^tohopchap(\d+)cua(\d+)$", query)
     if match_tohop:
-        k_str, n_str = match_tohop.groups()
-        k, n = int(k_str), int(n_str)
-        if k > n:
-            return "Lỗi: k không được lớn hơn n trong tổ hợp.", ""
+        k, n = map(int, match_tohop.groups())
+        if k > n: return "Lỗi: k không được lớn hơn n.", ""
         res = math.comb(n, k)
-        num_format = format_number(res)
-        text_format = read_vn_number(res)
-        return f"Kết quả tổ hợp chập {k} của {n}: {num_format}\nĐọc là: {text_format}", num_format
+        return f"Kết quả tổ hợp chập {k} của {n}: {format_number(res)}", format_number(res)
 
-    # Xử lý chỉnh hợp: chinhhopchap3cua12 -> math.perm(12, 3)
     match_chinhhop = re.match(r"^chinhhopchap(\d+)cua(\d+)$", query)
     if match_chinhhop:
-        k_str, n_str = match_chinhhop.groups()
-        k, n = int(k_str), int(n_str)
-        if k > n:
-            return "Lỗi: k không được lớn hơn n trong chỉnh hợp.", ""
+        k, n = map(int, match_chinhhop.groups())
+        if k > n: return "Lỗi: k không được lớn hơn n.", ""
         res = math.perm(n, k)
-        num_format = format_number(res)
-        text_format = read_vn_number(res)
-        return f"Kết quả chỉnh hợp chập {k} của {n}: {num_format}\nĐọc là: {text_format}", num_format
+        return f"Kết quả chỉnh hợp chập {k} của {n}: {format_number(res)}", format_number(res)
 
-    # Xử lý hoán vị: hoanvi5 -> math.factorial(5)
     match_hoanvi = re.match(r"^hoanvi(\d+)$", query)
     if match_hoanvi:
-        n_str = match_hoanvi.groups()[0]
-        n = int(n_str)
+        n = int(match_hoanvi.groups()[0])
         res = math.factorial(n)
-        num_format = format_number(res)
-        text_format = read_vn_number(res)
-        return f"Kết quả hoán vị của {n}: {num_format}\nĐọc là: {text_format}", num_format
+        return f"Kết quả hoán vị của {n}: {format_number(res)}", format_number(res)
+
+    match_ptb2 = re.match(r"^ptb2\s+([-\d\.]+)\s+([-\d\.]+)\s+([-\d\.]+)$", query)
+    if match_ptb2:
+        a, b, c = map(float, match_ptb2.groups())
+        res = solve_quadratic(a, b, c)
+        return res, ""
+
+    match_ptb3 = re.match(r"^ptb3\s+([-\d\.]+)\s+([-\d\.]+)\s+([-\d\.]+)\s+([-\d\.]+)$", query)
+    if match_ptb3:
+        a, b, c, d = map(float, match_ptb3.groups())
+        res = solve_cubic(a, b, c, d)
+        return res, ""
+
+    match_ptb4 = re.match(r"^ptb4\s+([-\d\.]+)\s+([-\d\.]+)\s+([-\d\.]+)\s+([-\d\.]+)\s+([-\d\.]+)$", query)
+    if match_ptb4:
+        coeffs = list(map(float, match_ptb4.groups()))
+        res = solve_polynomial(coeffs)
+        return res, ""
+
+    if query.startswith("ptbn"):
+        parts = query.replace("ptbn", "").strip().split()
+        try:
+            coeffs = [float(x) for x in parts]
+            res = solve_polynomial(coeffs)
+            return res, ""
+        except Exception:
+            return "Lỗi cú pháp phương trình bậc n. Dùng: ptbn [hệ_số...]", ""
+
+    match_he2 = re.match(r"^he2\s+([-\d\.]+)\s+([-\d\.]+)\s+([-\d\.]+)\s+([-\d\.]+)\s+([-\d\.]+)\s+([-\d\.]+)$", query)
+    if match_he2:
+        vals = list(map(float, match_he2.groups()))
+        matrix = [
+            [vals[0], vals[1], vals[2]],
+            [vals[3], vals[4], vals[5]]
+        ]
+        return solve_linear_system(matrix), ""
+
+    match_he3 = re.match(r"^he3\s+" + r"\s+".join([r"([-\d\.]+)" for _ in range(12)]) + r"$", query)
+    if match_he3:
+        vals = list(map(float, match_he3.groups()))
+        matrix = [
+            [vals[0], vals[1], vals[2], vals[3]],
+            [vals[4], vals[5], vals[6], vals[7]],
+            [vals[8], vals[9], vals[10], vals[11]]
+        ]
+        return solve_linear_system(matrix), ""
+
+    if query.startswith("hen"):
+        parts = query.replace("hen", "").strip().split()
+        if len(parts) < 1:
+            return "Lỗi cú pháp hệ n phương trình.", ""
+        try:
+            n = int(parts[0])
+            vals = [float(x) for x in parts[1:]]
+            if len(vals) != n * (n + 1):
+                return f"Lỗi: Hệ {n} phương trình cần đúng {n*(n+1)} hệ số.", ""
+            matrix = []
+            idx = 0
+            for i in range(n):
+                row = vals[idx:idx+n+1]
+                matrix.append(row)
+                idx += n + 1
+            return solve_linear_system(matrix), ""
+        except Exception as e:
+            return f"Lỗi xử lý hệ n phương trình: {e}", ""
 
     query = query.replace(" ", "") 
     query = query.replace("$", "usd")
