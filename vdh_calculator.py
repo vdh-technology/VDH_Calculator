@@ -11,22 +11,23 @@ from fractions import Fraction
 
 # Nội dung tài liệu hướng dẫn được nhúng sẵn vào mã nguồn
 HD_CONTENT = """TÀI LIỆU HƯỚNG DẪN SỬ DỤNG CHƯƠNG TRÌNH VDH CALCULATOR
-Chương trình được phát triển hỗ trợ tối ưu cho học tập và làm việc.
-Tài liệu hướng dẫn chi tiết các thao tác tính toán số học, phân số, trị tuyệt đối, căn bậc n, lượng giác và quy đổi đơn vị.
+Chương trình hỗ trợ tính toán số học, phân số, trị tuyệt đối, tổ hợp, chỉnh hợp, hoán vị, căn bậc n, lượng giác và quy đổi đơn vị.
 
-1. TÍNH TOÁN SỐ HỌC, PHÂN SỐ, TRỊ TUYỆT ĐỐI VÀ KHAI CĂN
+1. TÍNH TOÁN SỐ HỌC, PHÂN SỐ, TRỊ TUYỆT ĐỐI VÀ TỔ HỢP - CHỈNH HỢP - HOÁN VỊ
 - Phép tính cơ bản: Nhập trực tiếp biểu thức cộng, trừ, nhân, chia như 15+25, 100-35, 12*8, 144/12 hoặc kết hợp dấu ngoặc (10+5)*2 rồi nhấn Enter.
-- Phép tính phân số: Nhập theo cú pháp phan so, ví dụ phan so 1phan2+2phan3 hoặc phan so 3phan4*5phan6 rồi nhấn Enter.
-- Tính giá trị tuyệt đối: Nhập trituyetdoi kèm theo số hoặc biểu thức, ví dụ trituyetdoi(-12) hoặc trituyetdoi-15.
-- Phép tính lũy thừa (mũ): Dùng dấu ^, ví dụ 2^3 để tính 2 mũ 3, 5^2 để tính 5 bình phương.
-- Phép tính căn bậc hai: Nhập can(2) kèm theo số cần tính, ví dụ can(2)16 ra kết quả 4.
-- Phép tính căn bậc ba: Nhập can(3) kèm theo số, ví dụ can(3)27 ra kết quả 3.
+- Phép tính phân số: Nhập theo cú pháp phan so, ví dụ phan so 1phan2+2phan3 rồi nhấn Enter.
+- Trị tuyệt đối: Nhập trituyetdoi kèm theo số, ví dụ trituyetdoi(-12).
+- Tổ hợp: Nhập theo cú pháp tohopchap[k]cua[n], ví dụ tohopchap3cua12.
+- Chỉnh hợp: Nhập theo cú pháp chinhhopchap[k]cua[n], ví dụ chinhhopchap3cua12.
+- Hoán vị: Nhập theo cú pháp hoanvi[n], ví dụ hoanvi5.
+- Phép tính lũy thừa (mũ): Dùng dấu ^, ví dụ 2^3.
+- Căn bậc n: Nhập can(n)số, ví dụ can(2)16.
 
 2. TÍNH TOÁN LƯỢNG GIÁC
-- Các hàm lượng giác tính theo độ (degree). Nhập sin30, cos60, tan45, cot45...
+- Nhập sin30, cos60, tan45, cot45...
 
 3. QUY ĐỔI ĐƠN VỊ ĐO LƯỜNG
-- Cú pháp chuẩn: [Số lượng][Đơn vị nguồn]to[Đơn vị đích] (ví dụ: 5mtofoot, 50kgtolb, 100usdtovnd).
+- Cú pháp chuẩn: [Số lượng][Đơn vị nguồn]to[Đơn vị đích] (ví dụ: 5mtofoot, 100usdtovnd).
 
 4. CÁC PHÍM TẮT VÀ THAO TÁC HỖ TRỢ
 - Mở tài liệu hướng dẫn: Gõ hd hoặc 0 hoặc help.
@@ -175,14 +176,11 @@ def process_fraction(expression):
         return f"Lỗi tính toán phân số: {e}", ""
 
 def process_query(query):
-    # Xử lý phân số
     if query.startswith("phanso"):
         return process_fraction(query)
 
-    # Xử lý giá trị tuyệt đối (VD: trituyetdoi(-12) hoặc trituyetdoi-12)
     if query.startswith("trituyetdoi"):
         val_expr = query.replace("trituyetdoi", "").strip()
-        # Loại bỏ dấu ngoặc ngoài nếu có để đánh giá biểu thức bên trong
         if val_expr.startswith("(") and val_expr.endswith(")"):
             val_expr = val_expr[1:-1]
         try:
@@ -197,6 +195,40 @@ def process_query(query):
                 return "Lỗi: Biểu thức trị tuyệt đối chứa ký tự không hợp lệ.", ""
         except Exception as e:
             return f"Lỗi tính trị tuyệt đối: {e}", ""
+
+    # Xử lý tổ hợp: tohopchap3cua12 -> math.comb(12, 3)
+    match_tohop = re.match(r"^tohopchap(\d+)cua(\d+)$", query)
+    if match_tohop:
+        k_str, n_str = match_tohop.groups()
+        k, n = int(k_str), int(n_str)
+        if k > n:
+            return "Lỗi: k không được lớn hơn n trong tổ hợp.", ""
+        res = math.comb(n, k)
+        num_format = format_number(res)
+        text_format = read_vn_number(res)
+        return f"Kết quả tổ hợp chập {k} của {n}: {num_format}\nĐọc là: {text_format}", num_format
+
+    # Xử lý chỉnh hợp: chinhhopchap3cua12 -> math.perm(12, 3)
+    match_chinhhop = re.match(r"^chinhhopchap(\d+)cua(\d+)$", query)
+    if match_chinhhop:
+        k_str, n_str = match_chinhhop.groups()
+        k, n = int(k_str), int(n_str)
+        if k > n:
+            return "Lỗi: k không được lớn hơn n trong chỉnh hợp.", ""
+        res = math.perm(n, k)
+        num_format = format_number(res)
+        text_format = read_vn_number(res)
+        return f"Kết quả chỉnh hợp chập {k} của {n}: {num_format}\nĐọc là: {text_format}", num_format
+
+    # Xử lý hoán vị: hoanvi5 -> math.factorial(5)
+    match_hoanvi = re.match(r"^hoanvi(\d+)$", query)
+    if match_hoanvi:
+        n_str = match_hoanvi.groups()[0]
+        n = int(n_str)
+        res = math.factorial(n)
+        num_format = format_number(res)
+        text_format = read_vn_number(res)
+        return f"Kết quả hoán vị của {n}: {num_format}\nĐọc là: {text_format}", num_format
 
     query = query.replace(" ", "") 
     query = query.replace("$", "usd")
