@@ -11,15 +11,15 @@ from fractions import Fraction
 import cmath
 
 HD_CONTENT = """TÀI LIỆU HƯỚNG DẪN SỬ DỤNG CHƯƠNG TRÌNH VDH CALCULATOR
-Chương trình hỗ trợ tính toán số học, phân số, trị tuyệt đối, tổ hợp, chỉnh hợp, hoán vị, giải phương trình, hệ phương trình, căn bậc n, lượng giác và quy đổi đơn vị.
+Chương trình hỗ trợ tính toán số học, phân số, trị tuyệt đối, tổ hợp, chỉnh hợp, hoán vị, giải phương trình, hệ phương trình, căn bậc n, lượng giác, quy đổi đơn vị, giải tích và hệ cơ số.
 
-1. TÍNH TOÁN VÀ GIẢI TOÁN ĐẠI SỐ
+1. TÍNH TOÁN VÀ GIẢI TOÁN ĐẠI SỐ & GIẢI TÍCH
 - Phép tính cơ bản: Nhập biểu thức như 15+25, 12*8, (10+5)*2.
 - Phân số: Nhập theo cú pháp phan so, ví dụ phan so 1phan2+2phan3.
 - Trị tuyệt đối: Nhập trituyetdoi kèm theo số hoặc biểu thức, ví dụ trituyetdoi(-12).
 - Tổ hợp - Chỉnh hợp - Hoán vị:
-  + Tổ hợp: tohopchap[k]cua[n] (ví dụ: tohopchap3cua12)
-  + Chỉnh hợp: chinhhopchap[k]cua[n] (ví dụ: chinhhopchap3cua12)
+  + Tổ hợp: tohopchap[k]([n]) (ví dụ: tohopchap3(12))
+  + Chỉnh hợp: chinhhopchap[k]([n]) (ví dụ: chinhhopchap3(12))
   + Hoán vị: hoanvi[n] (ví dụ: hoanvi5)
 - Giải phương trình:
   + Bậc 2 (ax^2 + bx + c = 0): ptb2 a b c (ví dụ: ptb2 1 -3 2)
@@ -29,13 +29,26 @@ Chương trình hỗ trợ tính toán số học, phân số, trị tuyệt đ�
 - Giải hệ phương trình tuyến tính:
   + Hệ 2 phương trình: he2 a1 b1 c1 a2 b2 c2 (với a1x + b1y = c1)
   + Hệ 3 phương trình: he3 a1 b1 c1 d1 a2 b2 c2 d2 a3 b3 c3 d3
-  + Hệ 4 phương trình: he4 ...
   + Hệ n phương trình: hen [số_ẩn] [danh_sách_hệ_số...]
-- Lũy thừa và khai căn: Dùng dấu ^ (ví dụ 2^3), can(n)số (ví dụ can(2)16).
+- Lũy thừa, khai căn và Logarit: 
+  + Lũy thừa: 2^3
+  + Khai căn: can(n)số (ví dụ can(2)16)
+  + Logarit cơ số: log[cơ_số]([giá_trị]) (ví dụ log3(12))
+- Giải tích cơ bản theo biến x:
+  + Đạo hàm: daohamx^2 hoặc daoham(x^3 + 2*x)
+  + Nguyên hàm: nguyenhamx^2 (hoặc nguyenham(x^2))
+  + Tích phân xác định từ a đến b: tichphan[a:b](biểu_thức), ví dụ tichphan0:2(x^2)
 
-2. TÍNH TOÁN LƯỢNG GIÁC VÀ QUY ĐỔI ĐƠN VỊ
+2. TÍNH TOÁN LƯỢNG GIÁC, QUY ĐỔI ĐƠN VỊ VÀ HỆ CƠ SỐ
 - Lượng giác: sin30, cos60, tan45, cot45...
 - Quy đổi đơn vị: [Số][Đơn vị nguồn]to[Đơn vị đích] (ví dụ: 5mtofoot, 100usdtovnd).
+- Chuyển đổi hệ cơ số:
+  + Thập phân sang nhị phân: dectobin120 (hoặc dectobin 120)
+  + Thập phân sang bát phân: dectooct64
+  + Thập phân sang thập lục phân: dectohex255
+  + Nhị phân sang thập phân: bintodec1010
+  + Bát phân sang thập phân: octtodec100
+  + Thập lục phân sang thập phân: hextodecFF
 
 3. THAO TÁC HỖ TRỢ
 - Xem hướng dẫn: gõ hd, 0 hoặc help.
@@ -220,17 +233,14 @@ def solve_cubic(a, b, c, d):
     discriminant = (q/2.0)**2 + (p/3.0)**3
     
     roots = []
+    def cbrt(val):
+        return math.copysign(abs(val)**(1/3.0), val)
     if discriminant > 0:
         sqrt_disc = math.sqrt(discriminant)
-        u = (-q/2.0 + sqrt_disc)**(1/3.0) if -q/2.0 + sqrt_disc >= 0 else -((-q/2.0 + sqrt_disc) ** 3) # safe root handling
-        # simpler real cubic root
-        def cbrt(val):
-            return math.copysign(abs(val)**(1/3.0), val)
         u = cbrt(-q/2.0 + sqrt_disc)
         v = cbrt(-q/2.0 - sqrt_disc)
         roots.append(complex(u + v - b/3.0, 0))
     elif discriminant == 0:
-        u = cbrt = lambda x: math.copysign(abs(x)**(1/3.0), x)
         u_val = cbrt(-q/2.0)
         roots.append(complex(2*u_val - b/3.0, 0))
         roots.append(complex(-u_val - b/3.0, 0))
@@ -247,7 +257,6 @@ def solve_cubic(a, b, c, d):
     return res_str.strip()
 
 def solve_polynomial(coeffs):
-    # coeffs = [a_n, a_{n-1}, ..., a_0]
     n = len(coeffs) - 1
     if n <= 0:
         return "Hệ số không hợp lệ."
@@ -305,6 +314,126 @@ def solve_linear_system(matrix):
         res += f"x{i} = {format_number(val)}\n"
     return res.strip()
 
+def compute_derivative(expr_str):
+    expr = expr_str.replace(" ", "")
+    if expr.startswith("(") and expr.endswith(")"):
+        expr = expr[1:-1]
+    
+    terms = re.findall(r'([+\-]?\d*\.?\d*\*?x(?:\^\d+)?)', expr)
+    if not terms:
+        if not re.search(r'x', expr):
+            return "Đạo hàm của hằng số = 0", "0"
+        return "Chưa hỗ trợ biểu thức đạo hàm phức tạp này.", ""
+    
+    deriv_parts = []
+    for t in terms:
+        t = t.replace("*", "")
+        m = re.match(r'([+\-]?\d*\.?\d*)x(?:\^(\d+))?', t)
+        if m:
+            coef_str, exp_str = m.groups()
+            coef = 1.0 if coef_str in ["", "+"] else (-1.0 if coef_str == "-" else float(coef_str))
+            exp = int(exp_str) if exp_str else 1
+            
+            new_coef = coef * exp
+            new_exp = exp - 1
+            
+            if new_exp == 0:
+                deriv_parts.append(f"{new_coef:+g}".replace("+", "+ "))
+            elif new_exp == 1:
+                deriv_parts.append(f"{new_coef:+g}*x".replace("+", "+ "))
+            else:
+                deriv_parts.append(f"{new_coef:+g}*x^{new_exp}".replace("+", "+ "))
+    
+    res = " ".join(deriv_parts).strip()
+    if res.startswith("+"):
+        res = res[1:].strip()
+    return f"Đạo hàm: {res if res else '0'}", res
+
+def compute_integral(expr_str):
+    expr = expr_str.replace(" ", "")
+    if expr.startswith("(") and expr.endswith(")"):
+        expr = expr[1:-1]
+        
+    terms = re.findall(r'([+\-]?\d*\.?\d*\*?x(?:\^\d+)?)', expr)
+    if not terms:
+        if not re.search(r'x', expr):
+            try:
+                c = float(expr)
+                c_str = format_number(c)
+                return f"Nguyên hàm: {c_str}*x + C", f"{c_str}*x"
+            except:
+                pass
+        return "Chưa hỗ trợ biểu thức nguyên hàm phức tạp này.", ""
+        
+    integ_parts_frac = []
+    integ_parts_dec = []
+    
+    for t in terms:
+        t = t.replace("*", "")
+        m = re.match(r'([+\-]?\d*\.?\d*)x(?:\^(\d+))?', t)
+        if m:
+            coef_str, exp_str = m.groups()
+            if coef_str in ["", "+"]:
+                coef_frac = Fraction(1, 1)
+            elif coef_str == "-":
+                coef_frac = Fraction(-1, 1)
+            else:
+                coef_frac = Fraction(coef_str)
+                
+            exp = int(exp_str) if exp_str else 1
+            new_exp = exp + 1
+            new_coef_frac = coef_frac / new_exp
+            
+            num = new_coef_frac.numerator
+            den = new_coef_frac.denominator
+            
+            if den == 1:
+                frac_part = str(num)
+            else:
+                frac_part = f"{num}/{den}"
+                
+            float_val = float(new_coef_frac)
+            dec_part = format_number(float_val)
+            
+            var_part = f"x^{new_exp}" if new_exp > 1 else "x"
+            
+            if frac_part == "1": t_frac = var_part
+            elif frac_part == "-1": t_frac = f"-{var_part}"
+            else: t_frac = f"{frac_part}*{var_part}"
+            
+            if dec_part == "1": t_dec = var_part
+            elif dec_part == "-1": t_dec = f"-{var_part}"
+            else: t_dec = f"{dec_part}*{var_part}"
+            
+            integ_parts_frac.append(t_frac)
+            integ_parts_dec.append(t_dec)
+            
+    res_frac = " + ".join(integ_parts_frac).replace("+ -", "- ")
+    res_dec = " + ".join(integ_parts_dec).replace("+ -", "- ")
+    
+    if res_frac != res_dec:
+        return f"Nguyên hàm:\n- Dạng phân số: {res_frac} + C\n- Dạng thập phân: {res_dec} + C", res_dec
+    else:
+        return f"Nguyên hàm: {res_frac} + C", res_dec
+
+def compute_definite_integral(a, b, expr_str):
+    try:
+        n = 1000
+        h = (b - a) / n
+        total = 0.5 * (eval_at_x(expr_str, a) + eval_at_x(expr_str, b))
+        for i in range(1, n):
+            total += eval_at_x(expr_str, a + i * h)
+        total *= h
+        return f"Tích phân từ {a} đến {b} = {format_number(total)}", format_number(total)
+    except Exception as e:
+        return f"Lỗi tính tích phân: {e}", ""
+
+def eval_at_x(expr, x_val):
+    clean_expr = expr.replace("^", "**")
+    clean_expr = re.sub(r'(\d)x', r'\1*x', clean_expr)
+    clean_expr = clean_expr.replace("x", str(x_val))
+    return eval(clean_expr)
+
 def process_query(query):
     if query.startswith("phanso"):
         return process_fraction(query)
@@ -326,16 +455,18 @@ def process_query(query):
         except Exception as e:
             return f"Lỗi tính trị tuyệt đối: {e}", ""
 
-    match_tohop = re.match(r"^tohopchap(\d+)cua(\d+)$", query)
+    match_tohop = re.match(r"^tohopchap(\d+)\(([\d\.]+)\)$", query)
     if match_tohop:
-        k, n = map(int, match_tohop.groups())
+        k_str, n_str = match_tohop.groups()
+        k, n = int(k_str), int(n_str)
         if k > n: return "Lỗi: k không được lớn hơn n.", ""
         res = math.comb(n, k)
         return f"Kết quả tổ hợp chập {k} của {n}: {format_number(res)}", format_number(res)
 
-    match_chinhhop = re.match(r"^chinhhopchap(\d+)cua(\d+)$", query)
+    match_chinhhop = re.match(r"^chinhhopchap(\d+)\(([\d\.]+)\)$", query)
     if match_chinhhop:
-        k, n = map(int, match_chinhhop.groups())
+        k_str, n_str = match_chinhhop.groups()
+        k, n = int(k_str), int(n_str)
         if k > n: return "Lỗi: k không được lớn hơn n.", ""
         res = math.perm(n, k)
         return f"Kết quả chỉnh hợp chập {k} của {n}: {format_number(res)}", format_number(res)
@@ -345,6 +476,46 @@ def process_query(query):
         n = int(match_hoanvi.groups()[0])
         res = math.factorial(n)
         return f"Kết quả hoán vị của {n}: {format_number(res)}", format_number(res)
+
+    if query.startswith("daoham"):
+        return compute_derivative(query.replace("daoham", "").strip())
+
+    if query.startswith("nguyenham"):
+        return compute_integral(query.replace("nguyenham", "").strip())
+
+    match_tp = re.match(r"^tichphan([-\d\.]+):([-\d\.]+)\((.+)\)$", query)
+    if match_tp:
+        a_str, b_str, expr_part = match_tp.groups()
+        return compute_definite_integral(float(a_str), float(b_str), expr_part)
+
+    match_log = re.match(r"^log(\d+)\(([\d\.]+)\)$", query)
+    if match_log:
+        base_str, val_str = match_log.groups()
+        base, val = float(base_str), float(val_str)
+        if base <= 0 or base == 1 or val <= 0:
+            return "Lỗi: Cơ số logarit phải > 0 và khác 1, giá trị phải > 0.", ""
+        res = math.log(val, base)
+        base_display = int(base) if base.is_integer() else base
+        return f"Kết quả: log{base_display}({format_number(val)}) = {format_number(res)}", format_number(res)
+
+    if query.startswith("dectobin"):
+        try: val = int(query.replace("dectobin", "").strip()); return f"Nhị phân: {bin(val)[2:]}", bin(val)[2:]
+        except: return "Lỗi cú pháp dectobin[số]", ""
+    if query.startswith("dectooct"):
+        try: val = int(query.replace("dectooct", "").strip()); return f"Bát phân: {oct(val)[2:]}", oct(val)[2:]
+        except: return "Lỗi cú pháp dectooct[số]", ""
+    if query.startswith("dectohex"):
+        try: val = int(query.replace("dectohex", "").strip()); return f"Thập lục phân: {hex(val)[2:].upper()}", hex(val)[2:].upper()
+        except: return "Lỗi cú pháp dectohex[số]", ""
+    if query.startswith("bintodec"):
+        try: val = query.replace("bintodec", "").strip(); res = int(val, 2); return f"Thập phân: {res}", str(res)
+        except: return "Lỗi cú pháp bintodec[chuỗi_nhị_phân]", ""
+    if query.startswith("octtodec"):
+        try: val = query.replace("octtodec", "").strip(); res = int(val, 8); return f"Thập phân: {res}", str(res)
+        except: return "Lỗi cú pháp octtodec[chuỗi_bát_phân]", ""
+    if query.startswith("hextodec"):
+        try: val = query.replace("hextodec", "").strip(); res = int(val, 16); return f"Thập phân: {res}", str(res)
+        except: return "Lỗi cú pháp hextodec[chuỗi_hex]", ""
 
     match_ptb2 = re.match(r"^ptb2\s+([-\d\.]+)\s+([-\d\.]+)\s+([-\d\.]+)$", query)
     if match_ptb2:
